@@ -17,6 +17,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    dataBinding {
+        enabled = true
+    }
 }
 
 dependencies {
@@ -27,11 +30,12 @@ dependencies {
     compile "com.google.dagger:dagger:${dagger_version}"
     annotationProcessor "com.google.dagger:dagger-compiler:${dagger_version}"
 
-    compile 'com.birbit:android-priority-jobqueue:2.0.1'
-
     def retrofit_version = "2.1.0"
     compile "com.squareup.retrofit2:retrofit:${retrofit_version}"
     compile "com.squareup.retrofit2:converter-gson:${retrofit_version}"
+
+    compile 'com.birbit:android-priority-jobqueue:2.0.1'
+    compile 'com.jakewharton.timber:timber:4.4.0'
 
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
