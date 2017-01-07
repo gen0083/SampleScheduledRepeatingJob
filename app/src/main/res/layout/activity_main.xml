@@ -3,7 +3,14 @@
         xmlns:tools="http://schemas.android.com/tools"
     >
 
-    <RelativeLayout
+    <data>
+        <variable
+            name="activity"
+            type="jp.gcreate.sample.samplejobqueue.activity.MainActivity"
+            />
+    </data>
+
+    <LinearLayout
         android:id="@+id/activity_main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -11,6 +18,7 @@
         android:paddingLeft="@dimen/activity_horizontal_margin"
         android:paddingRight="@dimen/activity_horizontal_margin"
         android:paddingTop="@dimen/activity_vertical_margin"
+        android:orientation="vertical"
         tools:context="jp.gcreate.sample.samplejobqueue.activity.MainActivity"
         >
 
@@ -20,5 +28,21 @@
             android:layout_height="wrap_content"
             android:text="Hello World!"
             />
-    </RelativeLayout>
+
+        <Button
+            android:id="@+id/button_register_jobs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="@{() -> activity.registerJobs()}"
+            android:text="register jobs"
+            />
+
+        <Button
+            android:id="@+id/button_cancel_jobs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="@{() -> activity.cancelJobs()}"
+            android:text="cancel jobs"
+            />
+    </LinearLayout>
 </layout>

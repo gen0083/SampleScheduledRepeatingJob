@@ -20,9 +20,11 @@ import javax.inject.Singleton;
 
 import dagger.Component;
 import jp.gcreate.sample.samplejobqueue.activity.MainActivity;
+import jp.gcreate.sample.samplejobqueue.service.MyJobService;
 
 @Singleton
 @Component(modules = ApplicationModule.class)
 public interface ApplicationComponent {
     void inject(MainActivity activity);
+    void inject(MyJobService service);
 }
