@@ -16,19 +16,23 @@
 
 package jp.gcreate.sample.samplejobqueue.service;
 
-import android.app.job.JobInfo;
-import android.app.job.JobParameters;
-import android.app.job.JobScheduler;
-import android.app.job.JobService;
-import android.content.ComponentName;
 import android.content.Context;
+
+import com.firebase.jobdispatcher.Constraint;
+import com.firebase.jobdispatcher.FirebaseJobDispatcher;
+import com.firebase.jobdispatcher.GooglePlayDriver;
+import com.firebase.jobdispatcher.Job;
+import com.firebase.jobdispatcher.JobParameters;
+import com.firebase.jobdispatcher.JobService;
+import com.firebase.jobdispatcher.Lifetime;
+import com.firebase.jobdispatcher.RetryStrategy;
+import com.firebase.jobdispatcher.Trigger;
 
 import org.threeten.bp.Duration;
 import org.threeten.bp.ZonedDateTime;
 
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
@@ -44,6 +48,7 @@ import timber.log.Timber;
 
 public class MyJobService extends JobService {
     private static final int JOB_ID = 1;
+    private static final String JOB_TAG = "get-repositories-from-github";
 
     @Inject
     GitHubService gitHubService;
@@ -51,17 +56,23 @@ public class MyJobService extends JobService {
     OrmaDatabase ormaDatabase;
 
     public static void scheduleJobs(Context context) {
-        JobScheduler scheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
-        JobInfo.Builder builder = new JobInfo.Builder(JOB_ID, new ComponentName(context, MyJobService.class));
-        builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-               .setPeriodic(TimeUnit.SECONDS.toMillis(60))
-               .setPersisted(true);
-        scheduler.schedule(builder.build());
+        FirebaseJobDispatcher dispatcher = new FirebaseJobDispatcher(new GooglePlayDriver(context));
+        Job job = dispatcher.newJobBuilder()
+                            .setService(MyJobService.class)
+                            .setTag(JOB_TAG)
+                            .setRecurring(true)
+                            .setLifetime(Lifetime.FOREVER)
+                            .setTrigger(Trigger.executionWindow(30, 60))
+                            .setReplaceCurrent(true)
+                            .setRetryStrategy(RetryStrategy.DEFAULT_EXPONENTIAL)
+                            .setConstraints(Constraint.ON_ANY_NETWORK)
+                            .build();
+        dispatcher.mustSchedule(job);
     }
 
     public static void cancelJobs(Context context) {
-        JobScheduler scheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
-        scheduler.cancel(JOB_ID);
+        FirebaseJobDispatcher dispatcher = new FirebaseJobDispatcher(new GooglePlayDriver(context));
+        dispatcher.cancel(JOB_TAG);
     }
 
     @Override

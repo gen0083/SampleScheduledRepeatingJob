@@ -5,7 +5,7 @@ android {
     buildToolsVersion "25.0.2"
     defaultConfig {
         applicationId "jp.gcreate.sample.samplejobqueue"
-        minSdkVersion 21
+        minSdkVersion 16
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
@@ -28,6 +28,8 @@ dependencies {
     def support_version = "25.1.0"
     compile "com.android.support:appcompat-v7:${support_version}"
     compile "com.android.support:recyclerview-v7:${support_version}"
+
+    compile 'com.firebase:firebase-jobdispatcher:0.5.2'
 
     def dagger_version = "2.8"
     compile "com.google.dagger:dagger:${dagger_version}"
