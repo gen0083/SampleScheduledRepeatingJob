@@ -34,7 +34,6 @@ dependencies {
     compile "com.squareup.retrofit2:retrofit:${retrofit_version}"
     compile "com.squareup.retrofit2:converter-gson:${retrofit_version}"
 
-    compile 'com.birbit:android-priority-jobqueue:2.0.1'
     compile 'com.jakewharton.timber:timber:4.4.0'
 
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
