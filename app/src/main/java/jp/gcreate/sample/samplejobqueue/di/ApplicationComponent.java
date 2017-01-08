@@ -19,10 +19,13 @@ package jp.gcreate.sample.samplejobqueue.di;
 import javax.inject.Singleton;
 
 import dagger.Component;
+import jp.gcreate.sample.samplejobqueue.CustomApp;
 import jp.gcreate.sample.samplejobqueue.activity.MainActivity;
 
 @Singleton
 @Component(modules = ApplicationModule.class)
 public interface ApplicationComponent {
+    void inject(CustomApp app);
+
     void inject(MainActivity activity);
 }

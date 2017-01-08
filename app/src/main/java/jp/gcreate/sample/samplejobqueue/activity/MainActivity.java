@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import jp.gcreate.sample.samplejobqueue.R;
 import jp.gcreate.sample.samplejobqueue.api.GitHubService;
 import jp.gcreate.sample.samplejobqueue.databinding.ActivityMainBinding;
+import jp.gcreate.sample.samplejobqueue.job.MyJob;
 import jp.gcreate.sample.samplejobqueue.model.Repository;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -41,6 +42,7 @@ public class MainActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+        binding.setActivity(this);
 
         getApplicationComponent().inject(this);
     }
@@ -74,5 +76,15 @@ public class MainActivity extends BaseActivity {
                              t.printStackTrace();
                          }
                      });
+    }
+
+    public void registerJob() {
+        Timber.d("register job was clicked.");
+        MyJob.scheduleJobs();
+    }
+
+    public void cancelJob() {
+        Timber.d("cancel job was clicked.");
+        MyJob.cancelJobs();
     }
 }

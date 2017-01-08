@@ -18,13 +18,20 @@ package jp.gcreate.sample.samplejobqueue;
 
 import android.app.Application;
 
+import com.evernote.android.job.JobManager;
+
+import javax.inject.Inject;
+
 import jp.gcreate.sample.samplejobqueue.di.ApplicationComponent;
 import jp.gcreate.sample.samplejobqueue.di.ApplicationModule;
 import jp.gcreate.sample.samplejobqueue.di.DaggerApplicationComponent;
+import jp.gcreate.sample.samplejobqueue.job.MyJobCreator;
 import timber.log.Timber;
 
 public class CustomApp extends Application {
     ApplicationComponent applicationComponent;
+    @Inject
+    MyJobCreator myJobCreator;
 
     @Override
     public void onCreate() {
@@ -33,7 +40,10 @@ public class CustomApp extends Application {
         applicationComponent = DaggerApplicationComponent.builder()
                                                          .applicationModule(new ApplicationModule(this))
                                                          .build();
+        applicationComponent.inject(this);
+
         Timber.plant(new Timber.DebugTree());
+        JobManager.create(this).addJobCreator(myJobCreator);
     }
 
     public ApplicationComponent getApplicationComponent() {
