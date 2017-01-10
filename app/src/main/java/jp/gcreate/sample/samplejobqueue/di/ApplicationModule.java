@@ -25,6 +25,7 @@ import com.birbit.android.jobqueue.config.Configuration;
 import com.birbit.android.jobqueue.di.DependencyInjector;
 import com.birbit.android.jobqueue.scheduling.FrameworkJobSchedulerService;
 import com.birbit.android.jobqueue.scheduling.GcmJobSchedulerService;
+import com.github.gfx.android.orma.AccessThreadConstraint;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.gson.Gson;
@@ -38,6 +39,7 @@ import jp.gcreate.sample.samplejobqueue.CustomApp;
 import jp.gcreate.sample.samplejobqueue.api.GitHubService;
 import jp.gcreate.sample.samplejobqueue.jobs.DebugJobLogger;
 import jp.gcreate.sample.samplejobqueue.jobs.MyJob;
+import jp.gcreate.sample.samplejobqueue.model.OrmaDatabase;
 import jp.gcreate.sample.samplejobqueue.service.MyGcmJobService;
 import jp.gcreate.sample.samplejobqueue.service.MyJobService;
 import retrofit2.Retrofit;
@@ -68,6 +70,15 @@ public class ApplicationModule {
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
         return retrofit.create(GitHubService.class);
+    }
+
+    @Singleton
+    @Provides
+    public OrmaDatabase provideOrmaDatabase(Context context) {
+        return OrmaDatabase.builder(context)
+                .writeOnMainThread(AccessThreadConstraint.NONE)
+                .readOnMainThread(AccessThreadConstraint.NONE)
+                .build();
     }
 
     @Singleton
