@@ -18,6 +18,7 @@ package jp.gcreate.sample.samplejobqueue.di;
 
 import android.content.Context;
 
+import com.github.gfx.android.orma.AccessThreadConstraint;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -26,6 +27,7 @@ import javax.inject.Singleton;
 import dagger.Module;
 import dagger.Provides;
 import jp.gcreate.sample.samplejobqueue.api.GitHubService;
+import jp.gcreate.sample.samplejobqueue.model.OrmaDatabase;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -54,5 +56,14 @@ public class ApplicationModule {
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
         return retrofit.create(GitHubService.class);
+    }
+
+    @Singleton
+    @Provides
+    public OrmaDatabase provideOrmaDatabase(Context context) {
+        return OrmaDatabase.builder(context)
+                .writeOnMainThread(AccessThreadConstraint.NONE)
+                .readOnMainThread(AccessThreadConstraint.NONE)
+                .build();
     }
 }

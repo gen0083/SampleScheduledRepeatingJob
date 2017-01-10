@@ -22,13 +22,17 @@ import com.evernote.android.job.Job;
 import com.evernote.android.job.JobManager;
 import com.evernote.android.job.JobRequest;
 
+import org.threeten.bp.Duration;
+import org.threeten.bp.ZonedDateTime;
+
 import java.io.IOException;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import jp.gcreate.sample.samplejobqueue.api.GitHubService;
+import jp.gcreate.sample.samplejobqueue.model.JobHistory;
+import jp.gcreate.sample.samplejobqueue.model.OrmaDatabase;
 import jp.gcreate.sample.samplejobqueue.model.Repository;
 import retrofit2.Response;
 import timber.log.Timber;
@@ -37,9 +41,11 @@ public class MyJob extends Job {
     public static final String TAG = "MyJob";
 
     private GitHubService gitHubService;
+    private OrmaDatabase  ormaDatabase;
 
-    public MyJob(GitHubService gitHubService) {
+    public MyJob(GitHubService gitHubService, OrmaDatabase ormaDatabase) {
         this.gitHubService = gitHubService;
+        this.ormaDatabase = ormaDatabase;
     }
 
     @NonNull
@@ -58,7 +64,14 @@ public class MyJob extends Job {
             for (Repository repository : repositories) {
                 Timber.d(repository.toString());
             }
-            Timber.d("scheduled job was finished. %s", new Date());
+            ZonedDateTime now = ZonedDateTime.now();
+            Timber.d("scheduled job was finished. %s", now);
+            JobHistory previous = ormaDatabase.selectFromJobHistory()
+                                              .orderByCheckedDateDesc()
+                                              .getOrNull(0);
+            Duration duration = (previous == null) ? Duration.ZERO
+                                : Duration.between(previous.checkedDate, now);
+            ormaDatabase.insertIntoJobHistory(new JobHistory(now, duration, repositories.size()));
             return Result.SUCCESS;
         } catch (IOException e) {
             Timber.e("got exceptions job was rescheduled:%s", e);
@@ -77,7 +90,7 @@ public class MyJob extends Job {
     }
 
     public static void cancelJobs() {
-        JobManager manager = JobManager.instance();
+        JobManager      manager  = JobManager.instance();
         Set<JobRequest> requests = manager.getAllJobRequestsForTag(TAG);
         Timber.d("JobRequest size=%d", requests.size());
         for (JobRequest request : requests) {

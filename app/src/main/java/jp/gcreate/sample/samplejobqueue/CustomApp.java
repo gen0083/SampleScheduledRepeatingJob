@@ -22,6 +22,8 @@ import com.evernote.android.job.JobManager;
 
 import javax.inject.Inject;
 
+import com.jakewharton.threetenabp.AndroidThreeTen;
+
 import jp.gcreate.sample.samplejobqueue.di.ApplicationComponent;
 import jp.gcreate.sample.samplejobqueue.di.ApplicationModule;
 import jp.gcreate.sample.samplejobqueue.di.DaggerApplicationComponent;
@@ -43,6 +45,7 @@ public class CustomApp extends Application {
         applicationComponent.inject(this);
 
         Timber.plant(new Timber.DebugTree());
+        AndroidThreeTen.init(this);
         JobManager.create(this).addJobCreator(myJobCreator);
     }
 

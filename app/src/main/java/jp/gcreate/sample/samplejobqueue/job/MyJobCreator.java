@@ -23,20 +23,23 @@ import com.evernote.android.job.JobCreator;
 import javax.inject.Inject;
 
 import jp.gcreate.sample.samplejobqueue.api.GitHubService;
+import jp.gcreate.sample.samplejobqueue.model.OrmaDatabase;
 
 public class MyJobCreator implements JobCreator {
     private GitHubService gitHubService;
+    private OrmaDatabase  ormaDatabase;
 
     @Inject
-    public MyJobCreator(GitHubService gitHubService) {
+    public MyJobCreator(GitHubService gitHubService, OrmaDatabase ormaDatabase) {
         this.gitHubService = gitHubService;
+        this.ormaDatabase = ormaDatabase;
     }
 
     @Override
     public Job create(String tag) {
         switch (tag) {
             case MyJob.TAG:
-                return new MyJob(gitHubService);
+                return new MyJob(gitHubService, ormaDatabase);
             default:
                 return null;
         }
