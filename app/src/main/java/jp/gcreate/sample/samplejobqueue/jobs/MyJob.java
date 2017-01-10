@@ -24,14 +24,18 @@ import com.birbit.android.jobqueue.JobManager;
 import com.birbit.android.jobqueue.Params;
 import com.birbit.android.jobqueue.RetryConstraint;
 
+import org.threeten.bp.Duration;
+import org.threeten.bp.ZonedDateTime;
+
 import java.io.IOException;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
 import jp.gcreate.sample.samplejobqueue.api.GitHubService;
+import jp.gcreate.sample.samplejobqueue.model.JobHistory;
+import jp.gcreate.sample.samplejobqueue.model.OrmaDatabase;
 import jp.gcreate.sample.samplejobqueue.model.Repository;
 import retrofit2.Response;
 import timber.log.Timber;
@@ -44,11 +48,13 @@ public class MyJob extends Job {
     GitHubService gitHubService;
     @Inject
     JobManager    jobManager;
+    @Inject
+    OrmaDatabase  ormaDatabase;
     private String user;
 
     public MyJob(String user) {
         super(new Params(PRIORITY)
-                      .requireNetwork()
+                      .requireUnmeteredNetwork()
                       .setDelayMs(TimeUnit.SECONDS.toMillis(60))
                       .groupBy(JOB_TAG)
                       .singleInstanceBy(JOB_TAG)
@@ -83,7 +89,18 @@ public class MyJob extends Job {
             for (Repository repository : repositories) {
                 Timber.d(repository.toString());
             }
-            Timber.d("scheduled job was finished. %s", new Date());
+            ZonedDateTime checkedDate = ZonedDateTime.now();
+            Timber.d("scheduled job was finished. %s", checkedDate);
+            JobHistory previous = ormaDatabase.selectFromJobHistory()
+                                              .orderByCheckedDateDesc()
+                                              .getOrNull(0);
+            Duration duration;
+            if (previous == null) {
+                duration = Duration.ZERO;
+            } else {
+                duration = Duration.between(previous.checkedDate, checkedDate);
+            }
+            ormaDatabase.insertIntoJobHistory(new JobHistory(checkedDate, duration, repositories.size()));
 
             // Add job itself to recur tasks.
             jobManager.addJobInBackground(new MyJob(user));
@@ -104,7 +121,8 @@ public class MyJob extends Job {
     protected RetryConstraint shouldReRunOnThrowable(@NonNull Throwable throwable, int runCount,
                                                      int maxRunCount) {
         Timber.d("retry %d times", runCount);
-        Timber.d("shouldReRunOnThrowable: throwable=%s, runCount=%d, max=%d", throwable, runCount, maxRunCount);
+        Timber.d("shouldReRunOnThrowable: throwable=%s, runCount=%d, max=%d", throwable, runCount,
+                 maxRunCount);
         if (runCount > maxRunCount) {
             Timber.d("failed over max retry counts(%d), so job was canceled.", maxRunCount);
             return RetryConstraint.CANCEL;

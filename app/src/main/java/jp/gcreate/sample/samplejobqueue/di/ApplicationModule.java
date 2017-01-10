@@ -44,6 +44,7 @@ import jp.gcreate.sample.samplejobqueue.service.MyGcmJobService;
 import jp.gcreate.sample.samplejobqueue.service.MyJobService;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import timber.log.Timber;
 
 @Module
 public class ApplicationModule {
@@ -101,11 +102,15 @@ public class ApplicationModule {
                 ;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             builder.scheduler(FrameworkJobSchedulerService.createSchedulerFor(context, MyJobService.class));
+            Timber.d("scheduled by framework job scheduler");
         } else {
             int enableGcm = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context);
             if (enableGcm == ConnectionResult.SUCCESS) {
                 builder.scheduler(GcmJobSchedulerService.createSchedulerFor(context,
                                                                             MyGcmJobService.class));
+                Timber.d("scheduled by gcm job scheduler");
+            } else {
+                Timber.d("not scheduled");
             }
         }
         return new JobManager(builder.build());
