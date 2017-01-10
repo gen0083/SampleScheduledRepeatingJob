@@ -16,27 +16,35 @@
 
 package jp.gcreate.sample.samplejobqueue.activity;
 
+import android.content.Context;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v7.widget.RecyclerView;
+import android.view.View;
+import android.view.ViewGroup;
 
-import java.util.List;
+import com.github.gfx.android.orma.Relation;
+import com.github.gfx.android.orma.widget.OrmaRecyclerViewAdapter;
 
 import javax.inject.Inject;
 
 import jp.gcreate.sample.samplejobqueue.R;
 import jp.gcreate.sample.samplejobqueue.api.GitHubService;
 import jp.gcreate.sample.samplejobqueue.databinding.ActivityMainBinding;
-import jp.gcreate.sample.samplejobqueue.model.Repository;
+import jp.gcreate.sample.samplejobqueue.databinding.ItemRecyclerViewBinding;
+import jp.gcreate.sample.samplejobqueue.model.JobHistory;
+import jp.gcreate.sample.samplejobqueue.model.OrmaDatabase;
 import jp.gcreate.sample.samplejobqueue.service.MyJobService;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import timber.log.Timber;
 
 public class MainActivity extends BaseActivity {
     ActivityMainBinding binding;
     @Inject
+    OrmaDatabase ormaDatabase;
+    @Inject
     GitHubService gitHubService;
+    private Adapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,37 +53,14 @@ public class MainActivity extends BaseActivity {
         binding.setActivity(this);
 
         getApplicationComponent().inject(this);
+
+        adapter = new Adapter(this, ormaDatabase.relationOfJobHistory().orderByCheckedDateDesc());
+        binding.recyclerView.setAdapter(adapter);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        gitHubService.getRepositoriesList("gen0083")
-                     .enqueue(new Callback<List<Repository>>() {
-                         @Override
-                         public void onResponse(Call<List<Repository>> call,
-                                                Response<List<Repository>> response) {
-                             if (response.isSuccessful()) {
-                                 List<Repository> body = response.body();
-                                 StringBuilder    sb   = new StringBuilder();
-                                 Repository       one  = body.get(0);
-                                 sb.append("repositories count:" + body.size() + "\n");
-                                 sb.append("owner: " + one.getOwner() + "\n");
-                                 sb.append("repository: " + one + "\n");
-                                 binding.text.setText(sb.toString());
-                             } else {
-                                 Timber.d("onResponse failed:[%d]%s", response.code(),
-                                          response.message());
-                             }
-
-                         }
-
-                         @Override
-                         public void onFailure(Call<List<Repository>> call, Throwable t) {
-                             Timber.e("onFailure: %s", t.getMessage());
-                             t.printStackTrace();
-                         }
-                     });
     }
 
     public void registerJobs() {
@@ -86,5 +71,44 @@ public class MainActivity extends BaseActivity {
     public void cancelJobs() {
         Timber.d("cancelJobs was clicked.");
         MyJobService.cancelJobs(this);
+    }
+
+    public void clearHistory() {
+        Timber.d("clear history");
+        ormaDatabase.deleteFromJobHistory().executeAsSingle().subscribe();
+    }
+
+    static class VH extends RecyclerView.ViewHolder {
+        ItemRecyclerViewBinding binding;
+
+        public VH(View itemView) {
+            super(itemView);
+            binding = DataBindingUtil.bind(itemView);
+        }
+
+        public ItemRecyclerViewBinding getBinding() {
+            return binding;
+        }
+    }
+
+    static class Adapter extends OrmaRecyclerViewAdapter<JobHistory, VH> {
+
+        public Adapter(@NonNull Context context,
+                       @NonNull Relation<JobHistory, ?> relation) {
+            super(context, relation);
+        }
+
+        @Override
+        public VH onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view = getLayoutInflater().inflate(R.layout.item_recycler_view, parent, false);
+            return new VH(view);
+        }
+
+        @Override
+        public void onBindViewHolder(VH holder, int position) {
+            ItemRecyclerViewBinding binding = holder.getBinding();
+            JobHistory history = getItem(position);
+            binding.setHistory(history);
+        }
     }
 }

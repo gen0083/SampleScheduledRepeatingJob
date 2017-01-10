@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
     >
 
     <data>
@@ -44,5 +45,23 @@
             android:onClick="@{() -> activity.cancelJobs()}"
             android:text="cancel jobs"
             />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            app:layoutManager="LinearLayoutManager"
+            tools:listitem="@layout/item_recycler_view"
+            />
+
+        <Button
+            android:id="@+id/clear_history"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="clear history"
+            android:onClick="@{() -> activity.clearHistory()}"
+            />
+
     </LinearLayout>
 </layout>

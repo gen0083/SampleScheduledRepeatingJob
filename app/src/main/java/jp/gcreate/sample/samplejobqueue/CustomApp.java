@@ -18,6 +18,8 @@ package jp.gcreate.sample.samplejobqueue;
 
 import android.app.Application;
 
+import com.jakewharton.threetenabp.AndroidThreeTen;
+
 import jp.gcreate.sample.samplejobqueue.di.ApplicationComponent;
 import jp.gcreate.sample.samplejobqueue.di.ApplicationModule;
 import jp.gcreate.sample.samplejobqueue.di.DaggerApplicationComponent;
@@ -34,6 +36,7 @@ public class CustomApp extends Application {
                                                          .applicationModule(new ApplicationModule(this))
                                                          .build();
         Timber.plant(new Timber.DebugTree());
+        AndroidThreeTen.init(this);
     }
 
     public ApplicationComponent getApplicationComponent() {
