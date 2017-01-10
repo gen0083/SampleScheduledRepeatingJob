@@ -17,7 +17,16 @@
 package jp.gcreate.sample.samplejobqueue.di;
 
 import android.content.Context;
+import android.os.Build;
 
+import com.birbit.android.jobqueue.Job;
+import com.birbit.android.jobqueue.JobManager;
+import com.birbit.android.jobqueue.config.Configuration;
+import com.birbit.android.jobqueue.di.DependencyInjector;
+import com.birbit.android.jobqueue.scheduling.FrameworkJobSchedulerService;
+import com.birbit.android.jobqueue.scheduling.GcmJobSchedulerService;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -25,7 +34,12 @@ import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
+import jp.gcreate.sample.samplejobqueue.CustomApp;
 import jp.gcreate.sample.samplejobqueue.api.GitHubService;
+import jp.gcreate.sample.samplejobqueue.jobs.DebugJobLogger;
+import jp.gcreate.sample.samplejobqueue.jobs.MyJob;
+import jp.gcreate.sample.samplejobqueue.service.MyGcmJobService;
+import jp.gcreate.sample.samplejobqueue.service.MyJobService;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -54,5 +68,35 @@ public class ApplicationModule {
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
         return retrofit.create(GitHubService.class);
+    }
+
+    @Singleton
+    @Provides
+    public JobManager provideJobManager(final Context context) {
+        DependencyInjector injector = new DependencyInjector() {
+            @Override
+            public void inject(Job job) {
+                if (job instanceof MyJob) {
+                    ((CustomApp) context.getApplicationContext())
+                            .getApplicationComponent()
+                            .inject((MyJob) job);
+                }
+            }
+        };
+
+        Configuration.Builder builder = new Configuration.Builder(context)
+                .injector(injector)
+                .customLogger(new DebugJobLogger())
+                ;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            builder.scheduler(FrameworkJobSchedulerService.createSchedulerFor(context, MyJobService.class));
+        } else {
+            int enableGcm = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context);
+            if (enableGcm == ConnectionResult.SUCCESS) {
+                builder.scheduler(GcmJobSchedulerService.createSchedulerFor(context,
+                                                                            MyGcmJobService.class));
+            }
+        }
+        return new JobManager(builder.build());
     }
 }

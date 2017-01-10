@@ -16,13 +16,20 @@
 
 package jp.gcreate.sample.samplejobqueue.di;
 
+import com.birbit.android.jobqueue.JobManager;
+
 import javax.inject.Singleton;
 
 import dagger.Component;
 import jp.gcreate.sample.samplejobqueue.activity.MainActivity;
+import jp.gcreate.sample.samplejobqueue.jobs.MyJob;
 
 @Singleton
 @Component(modules = ApplicationModule.class)
 public interface ApplicationComponent {
     void inject(MainActivity activity);
+
+    void inject(MyJob job);
+
+    JobManager jobManager();
 }
