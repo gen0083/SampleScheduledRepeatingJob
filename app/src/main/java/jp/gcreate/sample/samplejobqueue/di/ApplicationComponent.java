@@ -22,7 +22,7 @@ import javax.inject.Singleton;
 
 import dagger.Component;
 import jp.gcreate.sample.samplejobqueue.activity.MainActivity;
-import jp.gcreate.sample.samplejobqueue.jobs.MyJob;
+import jp.gcreate.sample.samplejobqueue.job.MyJob;
 
 @Singleton
 @Component(modules = ApplicationModule.class)

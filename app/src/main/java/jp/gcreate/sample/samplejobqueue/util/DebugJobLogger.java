@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package jp.gcreate.sample.samplejobqueue.jobs;
+package jp.gcreate.sample.samplejobqueue.util;
 
 import com.birbit.android.jobqueue.log.CustomLogger;
 

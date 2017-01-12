@@ -35,7 +35,7 @@ import jp.gcreate.sample.samplejobqueue.R;
 import jp.gcreate.sample.samplejobqueue.api.GitHubService;
 import jp.gcreate.sample.samplejobqueue.databinding.ActivityMainBinding;
 import jp.gcreate.sample.samplejobqueue.databinding.ItemRecyclerViewBinding;
-import jp.gcreate.sample.samplejobqueue.jobs.MyJob;
+import jp.gcreate.sample.samplejobqueue.job.MyJob;
 import jp.gcreate.sample.samplejobqueue.model.JobHistory;
 import jp.gcreate.sample.samplejobqueue.model.OrmaDatabase;
 import timber.log.Timber;

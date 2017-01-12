@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package jp.gcreate.sample.samplejobqueue.jobs;
+package jp.gcreate.sample.samplejobqueue.job;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
