@@ -23,6 +23,9 @@ import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
 
+import org.threeten.bp.Duration;
+import org.threeten.bp.ZonedDateTime;
+
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +34,8 @@ import javax.inject.Inject;
 
 import jp.gcreate.sample.samplejobqueue.CustomApp;
 import jp.gcreate.sample.samplejobqueue.api.GitHubService;
+import jp.gcreate.sample.samplejobqueue.model.JobHistory;
+import jp.gcreate.sample.samplejobqueue.model.OrmaDatabase;
 import jp.gcreate.sample.samplejobqueue.model.Repository;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -42,13 +47,15 @@ public class MyJobService extends JobService {
 
     @Inject
     GitHubService gitHubService;
+    @Inject
+    OrmaDatabase ormaDatabase;
 
     public static void scheduleJobs(Context context) {
         JobScheduler scheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
         JobInfo.Builder builder = new JobInfo.Builder(JOB_ID, new ComponentName(context, MyJobService.class));
-//        builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_NOT_ROAMING);
-        builder.setPeriodic(TimeUnit.SECONDS.toMillis(30));
-        builder.setPersisted(true);
+        builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+               .setPeriodic(TimeUnit.SECONDS.toMillis(60))
+               .setPersisted(true);
         scheduler.schedule(builder.build());
     }
 
@@ -71,6 +78,18 @@ public class MyJobService extends JobService {
                             for (Repository repository : result) {
                                 Timber.d(repository.toString());
                             }
+                            ZonedDateTime now = ZonedDateTime.now();
+                            JobHistory previous = ormaDatabase.selectFromJobHistory()
+                                                              .orderByCheckedDateDesc()
+                                                              .getOrNull(0);
+                            Duration duration;
+                            if (previous == null) {
+                                duration = Duration.ZERO;
+                            } else {
+                                duration = Duration.between(previous.checkedDate, now);
+                            }
+                            ormaDatabase.insertIntoJobHistory(new JobHistory(now, duration, result.size()));
+
                             jobFinishedWithLog(params);
                         } else {
                             Timber.d("request was not successful: code=%d", response.code());
