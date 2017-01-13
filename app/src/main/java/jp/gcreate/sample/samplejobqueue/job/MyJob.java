@@ -83,7 +83,12 @@ public class MyJob extends Job {
     public static void scheduleJobs() {
         new JobRequest.Builder(TAG)
                 .setPersisted(true)
-                .setPeriodic(TimeUnit.MINUTES.toMillis(15))
+                // flexも指定したほうが、指定したintervalで起動しやすくなる。
+                // flexを省略した場合、intervalと同じ数値が設定され、0~intervalの間隔でジョブが実行される
+                // 例えば15分だけを指定した場合、ジョブの実行間隔が2分→28分→2分...となった
+                // これはintervalの間ではジョブが1回までしか起動しないという制約に引っかかるために起こる現象と思われる
+                // interval15, flex5の場合、ジョブの実行間隔は10分から15分の間で安定していた
+                .setPeriodic(TimeUnit.MINUTES.toMillis(15), TimeUnit.MINUTES.toMillis(5))
                 .setUpdateCurrent(true)
                 .build()
                 .schedule();
