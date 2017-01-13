@@ -54,7 +54,7 @@ public class MyJobService extends JobService {
         JobScheduler scheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
         JobInfo.Builder builder = new JobInfo.Builder(JOB_ID, new ComponentName(context, MyJobService.class));
         builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-               .setPeriodic(TimeUnit.SECONDS.toMillis(60))
+               .setMinimumLatency(TimeUnit.SECONDS.toMillis(60))
                .setPersisted(true);
         scheduler.schedule(builder.build());
     }
@@ -117,6 +117,8 @@ public class MyJobService extends JobService {
     private void jobFinishedWithLog(JobParameters params) {
         Timber.d("Scheduled job was finished. %s", new Date());
         jobFinished(params, false);
+        scheduleJobs(getApplicationContext());
+        Timber.d("Schedule next job");
     }
 
     @Override
