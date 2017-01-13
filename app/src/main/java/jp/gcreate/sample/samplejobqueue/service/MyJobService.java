@@ -16,19 +16,15 @@
 
 package jp.gcreate.sample.samplejobqueue.service;
 
-import android.app.job.JobInfo;
-import android.app.job.JobParameters;
-import android.app.job.JobScheduler;
-import android.app.job.JobService;
-import android.content.ComponentName;
-import android.content.Context;
+import android.app.Service;
+import android.content.Intent;
+import android.os.IBinder;
+import android.support.annotation.Nullable;
 
 import org.threeten.bp.Duration;
 import org.threeten.bp.ZonedDateTime;
 
-import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
@@ -42,82 +38,13 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import timber.log.Timber;
 
-public class MyJobService extends JobService {
+public class MyJobService extends Service {
     private static final int JOB_ID = 1;
 
     @Inject
     GitHubService gitHubService;
     @Inject
     OrmaDatabase ormaDatabase;
-
-    public static void scheduleJobs(Context context) {
-        JobScheduler scheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
-        JobInfo.Builder builder = new JobInfo.Builder(JOB_ID, new ComponentName(context, MyJobService.class));
-        builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-               .setPeriodic(TimeUnit.SECONDS.toMillis(60))
-               .setPersisted(true);
-        scheduler.schedule(builder.build());
-    }
-
-    public static void cancelJobs(Context context) {
-        JobScheduler scheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
-        scheduler.cancel(JOB_ID);
-    }
-
-    @Override
-    public boolean onStartJob(final JobParameters params) {
-        Timber.d("onStartJob: params=%s", params);
-        gitHubService.getRepositoriesList("gen0083")
-                .enqueue(new Callback<List<Repository>>() {
-                    @Override
-                    public void onResponse(Call<List<Repository>> call,
-                                           Response<List<Repository>> response) {
-                        if (response.isSuccessful()) {
-                            List<Repository> result = response.body();
-                            Timber.d("repositories count=%d", result.size());
-                            for (Repository repository : result) {
-                                Timber.d(repository.toString());
-                            }
-                            ZonedDateTime now = ZonedDateTime.now();
-                            JobHistory previous = ormaDatabase.selectFromJobHistory()
-                                                              .orderByCheckedDateDesc()
-                                                              .getOrNull(0);
-                            Duration duration;
-                            if (previous == null) {
-                                duration = Duration.ZERO;
-                            } else {
-                                duration = Duration.between(previous.checkedDate, now);
-                            }
-                            ormaDatabase.insertIntoJobHistory(new JobHistory(now, duration, result.size()));
-
-                            jobFinishedWithLog(params);
-                        } else {
-                            Timber.d("request was not successful: code=%d", response.code());
-                            jobFinishedWithLog(params);
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<List<Repository>> call, Throwable t) {
-                        Timber.e("request failed: %s", t);
-                        t.printStackTrace();
-                        jobFinishedWithLog(params);
-                    }
-                });
-        return true;
-    }
-
-    @Override
-    public boolean onStopJob(JobParameters params) {
-        Timber.d("onStopJob: params=%s", params);
-        jobFinishedWithLog(params);
-        return false;
-    }
-
-    private void jobFinishedWithLog(JobParameters params) {
-        Timber.d("Scheduled job was finished. %s", new Date());
-        jobFinished(params, false);
-    }
 
     @Override
     public void onCreate() {
@@ -132,5 +59,50 @@ public class MyJobService extends JobService {
     public void onDestroy() {
         super.onDestroy();
         Timber.v("onDestroy");
+    }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Timber.d("onStartCommand: intent=%s, flag:%d, startId:%d", intent, flags, startId);
+        gitHubService.getRepositoriesList("gen0083")
+                     .enqueue(new Callback<List<Repository>>() {
+                         @Override
+                         public void onResponse(Call<List<Repository>> call,
+                                                Response<List<Repository>> response) {
+                             if (response.isSuccessful()) {
+                                 List<Repository> result = response.body();
+                                 Timber.d("repositories count=%d", result.size());
+                                 for (Repository repository : result) {
+                                     Timber.d(repository.toString());
+                                 }
+                                 ZonedDateTime now = ZonedDateTime.now();
+                                 JobHistory previous = ormaDatabase.selectFromJobHistory()
+                                                                   .orderByCheckedDateDesc()
+                                                                   .getOrNull(0);
+                                 Duration duration;
+                                 if (previous == null) {
+                                     duration = Duration.ZERO;
+                                 } else {
+                                     duration = Duration.between(previous.checkedDate, now);
+                                 }
+                                 ormaDatabase.insertIntoJobHistory(new JobHistory(now, duration, result.size()));
+                             } else {
+                                 Timber.d("request was not successful: code=%d", response.code());
+                             }
+                         }
+
+                         @Override
+                         public void onFailure(Call<List<Repository>> call, Throwable t) {
+                             Timber.e("request failed: %s", t);
+                             t.printStackTrace();
+                         }
+                     });
+        return START_NOT_STICKY;
     }
 }

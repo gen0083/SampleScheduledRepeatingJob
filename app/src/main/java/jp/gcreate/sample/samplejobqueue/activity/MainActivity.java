@@ -35,7 +35,7 @@ import jp.gcreate.sample.samplejobqueue.databinding.ActivityMainBinding;
 import jp.gcreate.sample.samplejobqueue.databinding.ItemRecyclerViewBinding;
 import jp.gcreate.sample.samplejobqueue.model.JobHistory;
 import jp.gcreate.sample.samplejobqueue.model.OrmaDatabase;
-import jp.gcreate.sample.samplejobqueue.service.MyJobService;
+import jp.gcreate.sample.samplejobqueue.util.RepeatingAlarmManager;
 import timber.log.Timber;
 
 public class MainActivity extends BaseActivity {
@@ -44,6 +44,8 @@ public class MainActivity extends BaseActivity {
     OrmaDatabase ormaDatabase;
     @Inject
     GitHubService gitHubService;
+    @Inject
+    RepeatingAlarmManager alarmManager;
     private Adapter adapter;
 
     @Override
@@ -65,12 +67,12 @@ public class MainActivity extends BaseActivity {
 
     public void registerJobs() {
         Timber.d("registerJobs was clicked.");
-        MyJobService.scheduleJobs(this);
+        alarmManager.scheduleJob();
     }
 
     public void cancelJobs() {
         Timber.d("cancelJobs was clicked.");
-        MyJobService.cancelJobs(this);
+        alarmManager.cancelJob();
     }
 
     public void clearHistory() {
